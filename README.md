@@ -11,3 +11,7 @@ http://localhost:3000/ask
 install nodejs https://nodejs.org/en/download
 cd api answers
 in terminal "node server.js"
+
+# simulator
+Įdiek „Live Server“ extension
+Dešinėje paspausk Open with Live Server ant simulator.html

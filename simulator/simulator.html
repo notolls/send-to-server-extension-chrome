@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8">
+  <title>Request Simulator</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f0f0f0; }
+    textarea { width: 100%; height: 100px; margin-bottom: 10px; }
+    input[type="text"] { width: 100%; margin-bottom: 10px; }
+    button { padding: 8px 16px; margin-right: 10px; }
+    .response-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Lokali Request Simulator</h2>
+
+  <label>Klausimas / request:</label>
+  <textarea id="question"></textarea>
+
+  <label>Simuliuotas atsakymas:</label>
+  <textarea id="mockAnswer"></textarea>
+
+  <div>
+    <button id="simulateBtn">Simuliuoti Request</button>
+    <button id="realBtn">Siųsti į realų serverį</button>
+  </div>
+
+  <h3>Atsakymas:</h3>
+  <div class="response-box" id="responseBox">Čia bus atsakymas...</div>
+
+  <script>
+    const questionInput = document.getElementById("question");
+    const mockAnswerInput = document.getElementById("mockAnswer");
+    const responseBox = document.getElementById("responseBox");
+    const simulateBtn = document.getElementById("simulateBtn");
+    const realBtn = document.getElementById("realBtn");
+
+    // Simuliuojamas request
+    simulateBtn.addEventListener("click", () => {
+      const question = questionInput.value.trim();
+      const mockAnswer = mockAnswerInput.value.trim() || "Simuliuotas atsakymas tuščias";
+
+      // Imituoja delay
+      responseBox.innerText = "Loading...";
+      setTimeout(() => {
+        responseBox.innerText = `Klausimas: ${question}\nAtsakymas: ${mockAnswer}`;
+      }, 500);
+    });
+
+    // Siųsti į realų serverį (lokaliai)
+    realBtn.addEventListener("click", async () => {
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      responseBox.innerText = "Siunčiama į serverį...";
+      try {
+        const res = await fetch("http://localhost:3000/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: question })
+        });
+        const data = await res.json();
+        responseBox.innerText = `Klausimas: ${question}\nAtsakymas: ${data.response?.reply || "No reply"}`;
+      } catch (err) {
+        responseBox.innerText = "Klaida siunčiant į serverį: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
