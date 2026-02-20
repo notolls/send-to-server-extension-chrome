@@ -5,9 +5,3 @@ Enable Developer mode (top right)
 Click Load unpacked  Select your extension folder
 
 Set URL in options
-http://localhost:3000/ask
-# api
-
-install nodejs https://nodejs.org/en/download
-cd api answers
-in terminal "node server.js"
