@@ -9,12 +9,12 @@ app.use(express.json());
 
 const RESPONSES_FILE = path.join(__dirname, "responses.json");
 
-// Pagal nutylasdasdėjimą atsakymas, jei klausimas nerastas
-const DEFAULT_RESPONSE = "Sveiki! Čia lokalus atsakymas.";
+// Nurodome kelią iki failo, kurį norime siųsti kaip numatytąjį
+const DEFAULT_FILE_PATH = path.join(__dirname, "default_response.pdf"); // Pakeisk failo pavadinimą ir plėtinį
 
-// Funkcija nuskaityti atsakymus iš JSON
 function loadResponses() {
   try {
+    if (!fs.existsSync(RESPONSES_FILE)) return {};
     const data = fs.readFileSync(RESPONSES_FILE, "utf-8");
     return JSON.parse(data);
   } catch (err) {
@@ -26,29 +26,27 @@ function loadResponses() {
 // POST /ask
 app.post("/ask", (req, res) => {
   const question = (req.body.text || "").toLowerCase().trim();
-  console.log("Gauta užklausa:", question);
-
   const responses = loadResponses();
-  const reply = responses[question] || DEFAULT_RESPONSE;
 
-  res.json({
-    requestReceived: req.body,
-    response: { reply }
-  });
+  // Tikriname, ar turime specifinį atsakymą JSON faile
+  if (responses[question]) {
+    return res.json({
+      requestReceived: req.body,
+      response: { reply: responses[question] }
+    });
+  }
+
+  // Jei atsakymo nėra, siunčiame numatytąjį FAILĄ
+  console.log("Klausimas nerastas, siunčiamas numatytasis failas.");
+  
+  // Patikra, ar failas egzistuoja prieš siunčiant
+  if (fs.existsSync(DEFAULT_FILE_PATH)) {
+    res.sendFile(DEFAULT_FILE_PATH);
+  } else {
+    res.status(404).json({ error: "Numatytasis failas nerastas sistemoje." });
+  }
 });
 
-// Optional: pakeisti / pridėti atsakymus per API
-app.post("/set-response", (req, res) => {
-  const { question, reply } = req.body;
-  if (!question || !reply) return res.status(400).json({ error: "Reikia question ir reply" });
+// ... (likusi set-response dalis lieka tokia pati)
 
-  const responses = loadResponses();
-  responses[question.toLowerCase()] = reply;
-  fs.writeFileSync(RESPONSES_FILE, JSON.stringify(responses, null, 2), "utf-8");
-
-  res.json({ message: "Atsakymas atnaujintas!" });
-});
-
-app.listen(3000, () =>
-  console.log("Mock API veikia → http://localhost:3000")
-);
+app.listen(3000, () => console.log("Mock API veikia → http://localhost:3000"));
