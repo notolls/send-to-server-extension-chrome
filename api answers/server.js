@@ -9,7 +9,7 @@ app.use(express.json());
 
 const RESPONSES_FILE = path.join(__dirname, "responses.json");
 
-// Pagal nutylėjimą atsakymas, jei klausimas nerastas
+// Pagal nutylasdasdėjimą atsakymas, jei klausimas nerastas
 const DEFAULT_RESPONSE = "Sveiki! Čia lokalus atsakymas.";
 
 // Funkcija nuskaityti atsakymus iš JSON
