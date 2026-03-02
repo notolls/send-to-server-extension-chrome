@@ -4,49 +4,72 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
+
+// Svarbu: CORS leidžia plėtiniui susisiekti su lokaliu serveriu
 app.use(cors());
 app.use(express.json());
 
 const RESPONSES_FILE = path.join(__dirname, "responses.json");
 
-// Nurodome kelią iki failo, kurį norime siųsti kaip numatytąjį
-const DEFAULT_FILE_PATH = path.join(__dirname, "default_response.pdf"); // Pakeisk failo pavadinimą ir plėtinį
-
+// Funkcija nuskaityti atsakymus iš JSON
 function loadResponses() {
-  try {
-    if (!fs.existsSync(RESPONSES_FILE)) return {};
-    const data = fs.readFileSync(RESPONSES_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("Nepavyko nuskaityti responses.json:", err);
-    return {};
-  }
+    try {
+        if (!fs.existsSync(RESPONSES_FILE)) return {};
+        const data = fs.readFileSync(RESPONSES_FILE, "utf-8");
+        return JSON.parse(data);
+    } catch (err) {
+        console.error("Klaida nuskaitant responses.json:", err);
+        return {};
+    }
 }
 
 // POST /ask
 app.post("/ask", (req, res) => {
-  const question = (req.body.text || "").toLowerCase().trim();
-  const responses = loadResponses();
+    try {
+        // Pasiimame tekstą iš užklausos (dažniausiai plėtiniai siunčia body.text)
+        const rawText = req.body.text || "";
+        const question = rawText.toLowerCase().trim();
+        
+        console.log("Gautas pažymėtas tekstas:", rawText);
 
-  // Tikriname, ar turime specifinį atsakymą JSON faile
-  if (responses[question]) {
-    return res.json({
-      requestReceived: req.body,
-      response: { reply: responses[question] }
-    });
-  }
+        const responses = loadResponses();
 
-  // Jei atsakymo nėra, siunčiame numatytąjį FAILĄ
-  console.log("Klausimas nerastas, siunčiamas numatytasis failas.");
-  
-  // Patikra, ar failas egzistuoja prieš siunčiant
-  if (fs.existsSync(DEFAULT_FILE_PATH)) {
-    res.sendFile(DEFAULT_FILE_PATH);
-  } else {
-    res.status(404).json({ error: "Numatytasis failas nerastas sistemoje." });
-  }
+        // 1. Tikriname, ar turime paruoštą atsakymą JSON faile
+        if (responses[question]) {
+            return res.json({
+                requestReceived: req.body,
+                response: { reply: responses[question] }
+            });
+        }
+
+        // 2. JEI NĖRA JSON'e -> Gražiname TĄ PATĮ tekstą (Echo funkcionalumas)
+        // Tai užtikrins, kad plėtinys gaus atgal tai, ką išsiuntė
+        res.json({
+            requestReceived: req.body,
+            response: { reply: rawText } 
+        });
+
+    } catch (error) {
+        console.error("Serverio klaida apdorojant užklausą:", error);
+        res.status(500).json({ error: "Vidinė serverio klaida" });
+    }
 });
 
-// ... (likusi set-response dalis lieka tokia pati)
+// Maršrutas atsakymų papildymui
+app.post("/set-response", (req, res) => {
+    const { question, reply } = req.body;
+    if (!question || !reply) return res.status(400).json({ error: "Trūksta duomenų" });
 
-app.listen(3000, () => console.log("Mock API veikia → http://localhost:3000"));
+    const responses = loadResponses();
+    responses[question.toLowerCase()] = reply;
+    fs.writeFileSync(RESPONSES_FILE, JSON.stringify(responses, null, 2), "utf-8");
+
+    res.json({ message: "Atsakymas išsaugotas!" });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`\n🚀 Plėtinio serveris veikia!`);
+    console.log(`🔗 Endpoint'as: http://localhost:${PORT}/ask`);
+    console.log(`💡 Jei nerandama atitikmens JSON'e, bus grąžintas gautas tekstas.\n`);
+});
