@@ -1,9 +1,71 @@
 console.log("CONTENT SCRIPT LOADED");
 
 const DEFAULT_POPUP_TEMPLATE = `
-  <div style="font-weight:700; margin-bottom:8px;">Server response</div>
-  <div style="line-height:1.45; white-space:pre-wrap;">{{response}}</div>
-`;
+<div style="
+  background-color: #f0f4ff; 
+  border: 1px solid #a0b8ff; 
+  border-radius: 10px; 
+  padding: 16px 20px; 
+  font-family: Arial, sans-serif;
+  max-width: 420px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+">
+
+  <!-- Reklamos blokas viršuje -->
+  <div style="
+    margin-bottom: 16px; 
+    text-align:center; 
+    overflow:hidden; 
+    position:relative; 
+    height:160px;
+    border-radius:8px;
+  ">
+    <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=200&fit=crop" 
+         alt="Ad" 
+         style="width:100%; height:100%; object-fit:cover;">
+
+    <!-- Slidinantis tekstas -->
+    <div style="
+      position:absolute;
+      bottom:12px;
+      left:100%;
+      white-space:nowrap;
+      font-weight:700;
+      font-size:18px;
+      color:#ffffff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+      animation: slideText 6s linear infinite;
+    ">
+      🔥 Special Offer! Limited Time Deal!
+    </div>
+
+    <style>
+      @keyframes slideText {
+        0% { left: 100%; }
+        100% { left: -100%; }
+      }
+    </style>
+  </div>
+
+  <div style="
+    font-weight: 700; 
+    font-size: 18px; 
+    margin-bottom: 10px; 
+    color: #1a3aa1;
+  ">
+    Server response
+  </div>
+
+  <div style="
+    line-height: 1.5; 
+    font-size: 14px;
+    white-space: pre-wrap; 
+    color: #333;
+  ">
+    {{response}}
+  </div>
+
+</div>`;
 
 function removePopup() {
   const old = document.getElementById("server-response-popup");
@@ -62,8 +124,8 @@ async function createPopup(responseText) {
   popup.style.boxShadow = "0 4px 16px rgba(0,0,0,0.2)";
   popup.style.fontSize = "14px";
   popup.style.zIndex = "999999";
-  popup.style.maxWidth = "420px";
-  popup.style.maxHeight = "320px";
+  popup.style.width = "30vw";     // 1/3 ekrano pločio
+  popup.style.height = "70vh";
   popup.style.overflowY = "auto";
 
   popup.style.top = `${window.scrollY + rect.top}px`;
